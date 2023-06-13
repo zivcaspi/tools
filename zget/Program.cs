@@ -69,7 +69,7 @@ namespace zget
 
 ";
 
-        static string badOption = 
+        static string badOption =
 @"  Bad option '{0}'. Use option '-?' to get help.";
         static string badClipboard =
 @"  Clipboard does not hold a URL.";
@@ -382,8 +382,7 @@ namespace zget
         {
             // Configure security settings
             System.Net.ServicePointManager.CheckCertificateRevocationList = true;
-            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
+            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             // Make sure all numbers are formatted nicely.
             // By doing this, we get that whenever someone uses ToString("n"), they get
             // the same as ToString("n0"). Equivalently, they get the effect of:
@@ -687,7 +686,7 @@ namespace zget
 
             return password;
         }
-        
+
         static string[] s_officeViewers = { "PowerPoint.aspx", "OneNote.aspx", "WordViewer.aspx", "WopiFrame.aspx", "xlviewer.aspx" };
         static string[] s_officeViewersQueryItems = { "PresentationId", "id", "id", "sourcedoc", "id" };
         static int IndexOf(string[] values, string value)
@@ -724,12 +723,12 @@ namespace zget
             {
                 return srcUrl;
             }
-// TODO: This is no longer true in O15:
-//            if (srcUri.Segments[nSegments-2] != "_layouts/")
-//            {
-//                return srcUrl;
-//            }
-            string viewer = srcUri.Segments[nSegments-1];
+            // TODO: This is no longer true in O15:
+            //            if (srcUri.Segments[nSegments-2] != "_layouts/")
+            //            {
+            //                return srcUrl;
+            //            }
+            string viewer = srcUri.Segments[nSegments - 1];
             int viewerIndex = IndexOf(s_officeViewers, viewer);
             if (viewerIndex == -1)
             {
@@ -763,11 +762,11 @@ namespace zget
             srcUrl = srcUri.GetLeftPart(UriPartial.Authority) + docPath;
             return srcUrl;
 
-// http://sharepoint/sites/ISD/_layouts/PowerPoint.aspx?PowerPointView=ReadingView
-// &PresentationId=/sites/ISD/Brownbags/2011-%2007-07%20-%20Haris%20Majeed%20-%20Identity%20in%20AWS%20and%20GAE.pptx
-// &Source=http%3A%2F%2Fsharepoint%2Fsites%2FISD%2FBrownbags%2FForms%2FDefault1%2Easpx&DefaultItemOpen=1
+            // http://sharepoint/sites/ISD/_layouts/PowerPoint.aspx?PowerPointView=ReadingView
+            // &PresentationId=/sites/ISD/Brownbags/2011-%2007-07%20-%20Haris%20Majeed%20-%20Identity%20in%20AWS%20and%20GAE.pptx
+            // &Source=http%3A%2F%2Fsharepoint%2Fsites%2FISD%2FBrownbags%2FForms%2FDefault1%2Easpx&DefaultItemOpen=1
 
-// http://office/15/specs/_layouts/15/WopiFrame.aspx?sourcedoc=/15/specs/Specs/BI/Photo%20Vote%20Operations/Photo%20Vote%20Operations%20Handbook.docx&action=default&Source=http%3A%2F%2Foffice%2F15%2Fspecs%2FSpecs%2FForms%2FSpec%2520Document%2520Set%2Fdocsethomepage%2Easpx%3FID%3D26428%26FolderCTID%3D0x0120D52000BF7AE52AD652344B93DE777853D5AABB0097300CFF571BDF45A40B0E9EE13A9F19%26List%3D79fb6676%2D3f9b%2D4ae2%2Daabe%2De47f4316b2ee%26RootFolder%3D%252F15%252Fspecs%252FSpecs%252FBI%252FPhoto%2520Vote%2520Operations&DefaultItemOpen=1
+            // http://office/15/specs/_layouts/15/WopiFrame.aspx?sourcedoc=/15/specs/Specs/BI/Photo%20Vote%20Operations/Photo%20Vote%20Operations%20Handbook.docx&action=default&Source=http%3A%2F%2Foffice%2F15%2Fspecs%2FSpecs%2FForms%2FSpec%2520Document%2520Set%2Fdocsethomepage%2Easpx%3FID%3D26428%26FolderCTID%3D0x0120D52000BF7AE52AD652344B93DE777853D5AABB0097300CFF571BDF45A40B0E9EE13A9F19%26List%3D79fb6676%2D3f9b%2D4ae2%2Daabe%2De47f4316b2ee%26RootFolder%3D%252F15%252Fspecs%252FSpecs%252FBI%252FPhoto%2520Vote%2520Operations&DefaultItemOpen=1
         }
     }
 }
