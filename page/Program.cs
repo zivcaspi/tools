@@ -2,44 +2,101 @@
 using System.IO;
 using System.Text;
 
-static class Program
+class Program
 {
-    private static StringBuilder sb = new StringBuilder();
-    private static string pattern = null;
-
     public static int Main(string[] args)
+    {
+        Program program = new Program();
+        return program.Run(args);
+    }
+
+    private StringBuilder m_sb = new StringBuilder();
+    private string m_pattern = null;
+
+    public Program()
+    {
+    }
+
+    public int Run(string[] args)
     {
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
         {
             return Usage();
         }
 
-        if (!File.Exists(args[0]))
+        if (args[0] == "diff")
         {
-            Console.WriteLine("File does not exist.");
+            return Diff(args);
+        }
+        else
+        {
+            return Page(args);
+        }
+    }
+
+    public int Diff(string[] args)
+    {
+        if (args.Length < 3)
+        {
+            return Usage();
+        }
+
+        var lhs = args[1];
+        CheckFileExists(lhs);
+
+        var rhs = args[2];
+        CheckFileExists(rhs);
+
+        (int nLines, int width) = GetConsoleWindow();
+
+        using var leftFile = File.OpenRead(lhs);
+        using var rightFile = File.OpenRead(rhs);
+
+        using var leftReader = new StreamReader(leftFile, detectEncodingFromByteOrderMarks: true, bufferSize: 4096);
+        using var rightReader = new StreamReader(rightFile, detectEncodingFromByteOrderMarks: true, bufferSize: 4096);
+
+        var done = false;
+        while (!done)
+        {
+            var leftLine = ReadLine(leftReader, width);
+            var rightLine = ReadLine(rightReader, width);
+            if (leftLine == null && rightLine == null)
+            {
+                done = true;
+                break;
+            }
+            if (leftLine == rightLine)
+            {
+                continue;
+            }
+            Console.WriteLine("Diff found!");
+            Console.WriteLine(leftLine);
+            Console.WriteLine(rightLine);
             return 1;
         }
 
-        if (Console.IsOutputRedirected)
-        {
-            Console.WriteLine("Input is redirected, why use page?");
-            return 2;
-        }
+        return 0;
+    }
+
+    public int Page(string[] args)
+    {
+        var lhs = args[0];
+        CheckFileExists(lhs);
 
         if (args.Length > 1 && !string.IsNullOrWhiteSpace(args[1]))
         {
-            pattern = args[1];
+            m_pattern = args[1];
         }
 
-        var nLines = Math.Max(Console.WindowHeight, 4);
-        var width = Math.Max(Console.WindowWidth, 4);
-        using (var file = File.OpenRead(args[0]))
+        (int nLines, int width) = GetConsoleWindow();
+
+        using (var file = File.OpenRead(lhs))
         {
             using (var reader = new StreamReader(file, detectEncodingFromByteOrderMarks: true, bufferSize: 4096))
             {
-                if (!string.IsNullOrEmpty(pattern))
+                if (!string.IsNullOrEmpty(m_pattern))
                 {
-                    if (!ReadUntilPattern(reader, pattern))
+                    if (!ReadUntilPattern(reader, m_pattern))
                     {
                         Console.WriteLine(">>> Pattern not found <<<");
                         return 0;
@@ -79,15 +136,23 @@ static class Program
         return pos != -1;
     }
 
-    public static int Usage()
+    private static int Usage()
     {
-        Console.WriteLine("Usage: page <filename> [<pattern>]");
+        Console.WriteLine("page - a small utility to page through large files");
+        Console.WriteLine();
+        Console.WriteLine("  page <filename> [<pattern>]");
+        Console.WriteLine();
+        Console.WriteLine("    Page through file <filename>, starting right after the substring <pattern> (or position 0 if unspecified).");
+        Console.WriteLine();
+        Console.WriteLine("  page diff <filename1> <filename2>");
+        Console.WriteLine();
+        Console.WriteLine("    Page through the diff of the two files.");
         return 0;
     }
 
-    private static string? ReadLine(TextReader reader, int width)
+    private string? ReadLine(TextReader reader, int width)
     {
-        sb.Clear();
+        m_sb.Clear();
         for (int i = 0; i < width; i++)
         {
             var ch = reader.Read();
@@ -100,9 +165,37 @@ static class Program
             {
                 break;
             }
-            sb.Append((char)ch);
+            m_sb.Append((char)ch);
         }
-        return sb.ToString();
+        return m_sb.ToString();
+    }
+
+    private void CheckFileExists(string path)
+    {
+        if (path == null || string.IsNullOrWhiteSpace(path))
+        {
+            Console.WriteLine("File name cannot be empty"); // TODO: Really this should be to stderr and red
+            Environment.Exit(4);
+        }
+
+        if (!File.Exists(path))
+        {
+            Console.WriteLine("File does not exist: '{0}'", path);
+            Environment.Exit(5);
+        }
+    }
+
+    private (int nLines, int width) GetConsoleWindow()
+    {
+        if (Console.IsOutputRedirected)
+        {
+            Console.WriteLine("Input is redirected, why use page?"); // TODO: Red and to stderr
+            Environment.Exit(2);
+        }
+
+        var nLines = Math.Max(Console.WindowHeight, 4);
+        var width = Math.Max(Console.WindowWidth, 4);
+        return (nLines, width);
     }
 }
 
