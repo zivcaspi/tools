@@ -130,9 +130,39 @@ class Program
         return 0;
     }
 
-    private static bool ReadUntilPattern(TextReader reader, string pattern)
+    private unsafe static bool ReadUntilPattern(TextReader reader, string pattern)
     {
-        var pos = FindSubstringInStream.IndexOf(reader.Read, pattern);
+        long pos;
+
+        // An optimization for single-character patterns
+        // TODO: In this case how does the caller know which position we are in the buffer? We need to tell it that! Currently it'll simply start showing N characters _after_ the change (depending on the sizeo f the buffer after the pattern)
+        if (pattern.Length == 1)
+        {
+            var ch = pattern[0];
+            var buffer = new char[4096];
+            fixed (char* p = buffer)
+            {
+                while (true)
+                {
+                    var nCharacters = reader.ReadBlock(buffer, 0, buffer.Length);
+                    if (nCharacters == 0)
+                    {
+                        return false;
+                    }
+
+                    for (var q = p; q < p + Math.Min(nCharacters, buffer.Length); q++)
+                    {
+                        if (*q == ch)
+                        {
+                            return true;
+                        }
+                    }
+   
+                }
+            }
+        }
+
+        pos = FindSubstringInStream.IndexOf(reader.Read, pattern);
         return pos != -1;
     }
 
