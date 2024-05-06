@@ -1,0 +1,104 @@
+# <text>
+<blank-line>
+
+	Ignored as a comment line
+
+autologin <username> <password>
+
+	Sends username and password, hashed with the last received nonce.
+
+connect <host> <port>
+
+	Disconnect any existing connection and connect to the specified host and port numbers.
+
+delay <time_ms>
+
+	Delays execution by the spcified timeout value.
+
+disconnect
+
+	Disconnect any existing connection.
+
+echo <text>
+
+	Echos the text to the log. All manipulations mentioned under send apply.
+
+quit
+
+	Quits the application.
+
+receive <pattern>
+
+	Receive lines of text until the pattern is matched.
+	If ZTELNET_CRLF_REPLACE_IN_SCRIPT is set, any occurrent of this string
+		in <pattern> is replaced by a CRLF.
+	If ZTELNET_AUTO_CRLF is true, automatically append CRLF to <pattern>.
+	If the capture group "echo" is matched, it defines the part of the text
+		that will be echoed as output.
+	The entire match text is available for later commands to process.
+	
+	Example:
+	
+		receive (?<echo>\d\d\d)\x20.*
+		
+		Wait until you get a line of text that begins with a three-letter numeric code,
+		and has at least one space, and print that code only.
+
+send <text>
+
+	Sends text through the connection.
+	If ZTELNET_AUTO_CRLF is true, automatically append CRLF to <text>.
+	If ZTELNET_CRLF_REPLACE_IN_SCRIPT is set, any occurrence of this string
+		in <text> is replaced by a CRLF.
+	If ZTELNET_EMPTY_REPLACE_IN_SCRIPT is set, any occurrence of this string
+		in <text> is replaced by an empty string. This is useful mainly
+		when you want to send whitespace, for example:
+			send |   123
+		will send three space characters followed by "123".
+	If ZTELNET_EXPAND_ENVIRONMENT_STRINGS_IN_SCRIPT is true,
+		any occurence of an environment variable name in <text> is replaced
+		by its value. In addition, the following pseudo variables are defined:
+			
+			%ZTELNET_SCRIPT_NAME% is the file name of the current script
+			
+	Example:
+		
+		send Subject: %ZTELNET_SCRIPT_NAME%
+		
+		Send a mail "subject" line that contains the name of the script.
+
+sendfile <filename>
+
+	Sends a file through the connection.
+	The file is sent as-is, with no translation done on it.
+
+setoption <optionname>=<optionvalue>
+
+	Sets the named option to the indicated value.
+	Options which are not set using the setoption command are retrieved from the
+		environment variable of the same name. If no such variable is defined,
+		a default value is used.
+	
+		Option name										Option value  Default value
+		----------------------------------------------- ------------- --------------
+		ZTELNET_EXIT_WHEN_DISCONNECTED					true | false  false
+		ZTELNET_EXPAND_ENVIRONMENT_STRINGS_IN_SCRIPT	true | false  false
+		ZTELNET_CRLF_REPLACE_IN_SCRIPT					<string>      empty
+		ZTELNET_INTER_ACTION_DELAY						<int>         0
+		ZTELNET_AUTO_CRLF								true | false  true
+
+validate receive <pattern> //1
+validate connection up     //2
+validate connection down   //3 
+
+	Writes a validation line of the format:
+		
+		>> <result> (<script-name>)
+		
+	where <result> is "OK" or "FAILURE", and <script-name> is the name of the script.
+
+	Available validation commands are:	
+	
+		//1// Validate that the last received item matches the <pattern>
+		//2// Validate that the connection is currently up
+		//3// Validate that the connection is currently down
