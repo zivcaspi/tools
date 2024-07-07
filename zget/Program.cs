@@ -38,7 +38,7 @@ namespace zget
   Usage:
 
     zget.exe -h | -?
-    zget.exe (<srcUrl> | -c) [-o <dstUrl>] [-p <proxyServer>] [-v] [-vv] [-s] [-e] [-w] [-r] [-i]
+    zget.exe (<srcUrl> | -c) [-o <dstUrl>] [-p <proxyServer>] [-v] [-vv] [-s] [-e] [-w] [-r] [-i] [-b <bearerToken>]
 
   Remarks:
 
@@ -65,6 +65,8 @@ namespace zget
 
     Use -i to ignore SSL cert errors (or send HTTPS to an IP address).
 
+    Use -b to specify the bearer token to include in the request.
+
     Use -h or -? to get this usage screen.
 
 ";
@@ -78,6 +80,7 @@ namespace zget
         string dstUrl;
         bool autoDstUrl = true; // If true, indicates that the user wants us to calculate it ourselves
         string proxyServer;
+        string bearerToken;
         bool verbose;
         bool veryverbose;
         bool autostart;
@@ -111,6 +114,11 @@ namespace zget
             if (proxy != null)
             {
                 proxyServer = proxy;
+            }
+            string bearer = System.Environment.GetEnvironmentVariable("ZGET_BEARER_TOKEN");
+            if (bearer != null)
+            {
+                bearerToken = bearer;
             }
 
             // Command-line args
@@ -211,6 +219,19 @@ namespace zget
                         else if (option == 'i')
                         {
                             ignoreSslErrors = true;
+                        }
+                        else if (option == 'b')
+                        {
+                            a++;
+                            if (a >= args.Length)
+                            {
+                                Console.WriteLine(badOption, arg);
+                                return false;
+                            }
+                            else
+                            {
+                                bearerToken = args[a];
+                            }
                         }
                     }
                     else
@@ -455,6 +476,11 @@ namespace zget
             if (proxyServer != null)
             {
                 req.Proxy = new WebProxy(proxyServer);
+            }
+
+            if (bearerToken != null)
+            {
+                req.Headers.Add(HttpRequestHeader.Authorization, $"bearer {bearerToken}");
             }
 
             HttpWebRequest hwr = req as HttpWebRequest;
