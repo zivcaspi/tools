@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zget", "zget.csproj", "{62C61523-971F-46F6-B8C5-3EFF0B504193}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62C61523-971F-46F6-B8C5-3EFF0B504193}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62C61523-971F-46F6-B8C5-3EFF0B504193}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62C61523-971F-46F6-B8C5-3EFF0B504193}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62C61523-971F-46F6-B8C5-3EFF0B504193}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AA71FD49-F20D-41FD-BC36-75ADFA1C15D9}
+	EndGlobalSection
+EndGlobal
