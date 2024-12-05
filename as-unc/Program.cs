@@ -7,14 +7,12 @@ namespace as_unc
 {
     class Program
     {
-        static int Main(string[] args)
-        {
-            Program program = new Program(args);
-            return program.Run();
-        }
+        #region Constants and data
+        const string c_badOption =
+@"  Bad option '{0}'. Use option '-?' to get help.";
 
-        static string usage =
-@"
+        const string c_usage =
+        @"
 
   Name:
 
@@ -28,6 +26,7 @@ namespace as_unc
 
     as-unc.exe -h | -?
     as-unc.exe <Url> [<processname>]
+    as-unc.exe -open <Url>
     as-unc.exe <SourceDepotPath> (TODO: Add support for this)
 
   Examples:
@@ -36,11 +35,17 @@ namespace as_unc
 
 ";
 
-        static string badOption =
-@"  Bad option '{0}'. Use option '-?' to get help.";
+        string m_url;
+        bool m_open;
+        string m_process;
+        #endregion
 
-        string url;
-        string process;
+        #region Main and construction
+        static int Main(string[] args)
+        {
+            Program program = new Program(args);
+            return program.Run();
+        }
 
         Program(string[] args)
         {
@@ -49,13 +54,15 @@ namespace as_unc
                 System.Environment.Exit(1);
             }
         }
+        #endregion
 
+        #region Implementation
         bool TryParseArgs(string[] args)
         {
             // Command-line args
             if (args == null || args.Length < 1)
             {
-                Console.WriteLine(usage);
+                Console.WriteLine(c_usage);
                 return false;
             }
 
@@ -67,10 +74,16 @@ namespace as_unc
                     char c = arg[0];
                     if (c == '-' || c == '/')
                     {
+                        if (arg == "-open" || arg == "/open")
+                        {
+                            m_open = true;
+                            continue;
+                        }
+
                         // The argument is an option.
                         if (arg.Length < 2)
                         {
-                            Console.WriteLine(badOption, arg);
+                            Console.WriteLine(c_badOption, arg);
                             Console.WriteLine("Bad option '{0}'. Use option '-?' to get help.", arg);
                             return false;
                         }
@@ -78,34 +91,34 @@ namespace as_unc
                         char d = arg[1];
                         if (d == '?' || d == 'h')
                         {
-                            Console.WriteLine(usage);
+                            Console.WriteLine(c_usage);
                             // No need to get other options.
                             return false;
                         }
                         else if (d == '/')
                         {
                             // This is actually an SD path (//depot-or-client/...)
-                            url = arg;
+                            m_url = arg;
                         }
                     }
                     else
                     {
                         // The argument is not an option, so it must be the URL.
-                        if (url == null)
+                        if (m_url == null)
                         {
-                            url = arg;
+                            m_url = arg;
                         }
-                        else if (process == null)
+                        else if (m_process == null)
                         {
-                            process = arg;
+                            m_process = arg;
                         }
                     }
                 }
             }
 
-            if (url == null)
+            if (m_url == null)
             {
-                Console.WriteLine(usage);
+                Console.WriteLine(c_usage);
                 return false;
             }
 
@@ -114,7 +127,7 @@ namespace as_unc
 
         int Run()
         {
-            string name = this.url;
+            string name = this.m_url;
             Uri url = null;
             string file = null;
             if (name.StartsWith("//"))
@@ -152,7 +165,7 @@ namespace as_unc
 
             if (file != null)
             {
-                return Success(file, process);
+                return Success(file, m_open, m_process);
             }
 
             try
@@ -160,7 +173,7 @@ namespace as_unc
                 var fi = new FileInfo(name);
                 if (fi != null)
                 {
-                    return Success(fi.FullName, process);
+                    return Success(fi.FullName, m_open, m_process);
                 }
             }
             catch { }
@@ -188,9 +201,9 @@ namespace as_unc
             return 1;
         }
 
-        int Success(string u, string p)
+        static int Success(string u, bool o, string p)
         {
-            if (p != null)
+            if (p != null && !o)
             {
                 // TODO: Check if the file exists etc.
                 System.Console.WriteLine($"{p} {u}");
@@ -201,7 +214,18 @@ namespace as_unc
                 System.Console.WriteLine(u);
             }
 
+            if (o)
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = u,
+                    UseShellExecute = true,
+                };
+                System.Diagnostics.Process.Start(psi);
+            }
+
             return 0;
         }
+        #endregion
     }
 }
