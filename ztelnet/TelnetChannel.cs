@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -12,7 +13,7 @@ namespace ztelnet
 
 		// Private members
 		private TcpClient		Connection;
-		private NetworkStream	Stream;
+		private Stream	        Stream;
 		private Thread			ReceiveLoopThread;
 		private OnResponse			RaiseResponse;
 		private OnConnectionClosed	RaiseConnectionClosed;
@@ -29,8 +30,14 @@ namespace ztelnet
 			RaiseResponse			= response;
 			RaiseConnectionClosed	= connectionClosed;
 
-			Connection = new TcpClient( host, Int32.Parse( port ) );
+			var port_int = Int32.Parse( port );
+			Connection = new TcpClient( host, port_int );
 			Stream     = Connection.GetStream();
+
+			if ( port_int == 443 )
+			{
+				Stream = new System.Net.Security.SslStream( Stream );
+			}
 
 			connected = true;
 
