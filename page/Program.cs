@@ -49,8 +49,8 @@ class Program
 
         (int nLines, int width) = GetConsoleWindow();
 
-        using var leftFile = File.OpenRead(lhs);
-        using var rightFile = File.OpenRead(rhs);
+        using var leftFile = OpenForRead(lhs);
+        using var rightFile = OpenForRead(rhs);
 
         using var leftReader = new StreamReader(leftFile, detectEncodingFromByteOrderMarks: true, bufferSize: 4096);
         using var rightReader = new StreamReader(rightFile, detectEncodingFromByteOrderMarks: true, bufferSize: 4096);
@@ -90,7 +90,7 @@ class Program
 
         (int nLines, int width) = GetConsoleWindow();
 
-        using (var file = File.OpenRead(lhs))
+        using (var file = OpenForRead(lhs))
         {
             using (var reader = new StreamReader(file, detectEncodingFromByteOrderMarks: true, bufferSize: 4096))
             {
@@ -188,7 +188,11 @@ class Program
             var ch = reader.Read();
             if ( ch <= 0)
             {
-                return null;
+                if (m_sb.Length == 0)
+                {
+                    return null;
+                }
+                return m_sb.ToString();
             }
 
             if (ch == '\r' || ch == '\n')
@@ -226,6 +230,17 @@ class Program
         var nLines = Math.Max(Console.WindowHeight, 4);
         var width = Math.Max(Console.WindowWidth, 4);
         return (nLines, width);
+    }
+
+    private FileStream OpenForRead(string file)
+    {
+        return new FileStream(
+            file,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read | FileShare.Write | FileShare.Delete, // This allows us to read files that have the DeleteOnClose flag set
+            65536,
+            FileOptions.None);
     }
 }
 
