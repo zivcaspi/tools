@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -11,7 +12,7 @@ class Program
     }
 
     private StringBuilder m_sb = new StringBuilder();
-    private string m_pattern = null;
+    private string? m_pattern = null;
 
     public Program()
     {
@@ -19,6 +20,11 @@ class Program
 
     public int Run(string[] args)
     {
+        if (args.Length == 0 && Console.IsInputRedirected)
+        {
+            return PageStandardInput();
+        }
+
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
         {
             return Usage();
@@ -78,6 +84,11 @@ class Program
         return 0;
     }
 
+    public int PageStandardInput()
+    {
+        return PageImpl(Console.OpenStandardInput());
+    }
+
     public int Page(string[] args)
     {
         var lhs = args[0];
@@ -88,42 +99,47 @@ class Program
             m_pattern = args[1];
         }
 
-        (int nLines, int width) = GetConsoleWindow();
-
         using (var file = OpenForRead(lhs))
         {
-            using (var reader = new StreamReader(file, detectEncodingFromByteOrderMarks: true, bufferSize: 4096))
+            return PageImpl(file);
+        }
+    }
+
+    public int PageImpl(Stream stream)
+    {
+        (int nLines, int width) = GetConsoleWindow();
+
+        using (var reader = new StreamReader(stream, detectEncodingFromByteOrderMarks: true, bufferSize: 4096))
+        {
+            if (!string.IsNullOrEmpty(m_pattern))
             {
-                if (!string.IsNullOrEmpty(m_pattern))
+                if (!ReadUntilPattern(reader, m_pattern))
                 {
-                    if (!ReadUntilPattern(reader, m_pattern))
+                    Console.WriteLine(">>> Pattern not found <<<");
+                    return 0;
+                }
+            }
+
+            var done = false;
+            while (!done)
+            {
+                for (int i = 0; i < nLines; i++)
+                {
+                    var line = ReadLine(reader, width);
+                    if (line == null)
                     {
-                        Console.WriteLine(">>> Pattern not found <<<");
-                        return 0;
+                        done = true;
+                        break;
                     }
+                    Console.WriteLine(line);
                 }
 
-                var done = false;
-                while (!done)
+                if (!done)
                 {
-                    for (int i = 0; i < nLines; i++)
-                    {
-                        var line = ReadLine(reader, width);
-                        if (line == null)
-                        {
-                            done = true;
-                            break;
-                        }
-                        Console.WriteLine(line);
-                    }
-
-                    if (!done)
-                    {
-                        // TODO: Just wait for input... In the future we'll remove this line and continue again
-                        Console.WriteLine();
-                        Console.WriteLine(">>> Press ENTER to continue <<<");
-                        Console.ReadLine();
-                    }
+                    // TODO: Just wait for input... In the future we'll remove this line and continue again
+                    Console.WriteLine();
+                    Console.WriteLine(">>> Press ENTER to continue <<<");
+                    Console.ReadLine();
                 }
             }
         }
@@ -171,8 +187,9 @@ class Program
         Console.WriteLine("page - a small utility to page through large files");
         Console.WriteLine();
         Console.WriteLine("  page <filename> [<pattern>]");
+        Console.WriteLine("  <anotherApp> | page");
         Console.WriteLine();
-        Console.WriteLine("    Page through file <filename>, starting right after the substring <pattern> (or position 0 if unspecified).");
+        Console.WriteLine("    Page through file <filename> or the output of <anotherApp>, starting right after the substring <pattern> (or position 0 if unspecified).");
         Console.WriteLine();
         Console.WriteLine("  page diff <filename1> <filename2>");
         Console.WriteLine();

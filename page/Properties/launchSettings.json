@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "page": {
-      "commandName": "Project",
-      "commandLineArgs": "c:\\temp\\BigMeta\\1\\databaseObjects_v10+0000082540+0000000002.json.obfuscated \\"
-    }
-  }
-}
