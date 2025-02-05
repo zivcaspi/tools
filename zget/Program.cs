@@ -369,8 +369,9 @@ namespace zget
             {
                 // Run without a try/catch. This will have the debugger stop at the point of crash
                 // on failures.
-                RunImpl();
-                return;
+
+                // RunImpl();
+                // return;
             }
 
             // No debugger attached, so use a try/catch to provide maximum information
@@ -552,9 +553,16 @@ namespace zget
                     var resp = client.Send(req);
                     if (!resp.IsSuccessStatusCode)
                     {
-                        // Error...
-                        // TODO: Handle the error
                         Console.WriteLine("HTTP error: {0} {1}", resp.StatusCode, resp.ReasonPhrase);
+
+                        if (resp.StatusCode == HttpStatusCode.Moved || resp.StatusCode == HttpStatusCode.MovedPermanently)
+                        {
+                            Console.WriteLine("Location: {0}", resp.Headers.Location);
+                        }
+                        else
+                        {
+                            // TODO: Write more information about the error, such as the headers and the body...
+                        }
                         return;
                     }
 
