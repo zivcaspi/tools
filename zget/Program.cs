@@ -553,14 +553,17 @@ namespace zget
                     var resp = client.Send(req);
                     if (!resp.IsSuccessStatusCode)
                     {
-                        Console.WriteLine("HTTP error: {0} {1}", resp.StatusCode, resp.ReasonPhrase);
-
-                        if (resp.StatusCode == HttpStatusCode.Moved || resp.StatusCode == HttpStatusCode.MovedPermanently)
+                        if (resp.StatusCode == HttpStatusCode.Moved // 301
+                            || resp.StatusCode == HttpStatusCode.MovedPermanently // 301
+                            || resp.StatusCode == HttpStatusCode.Found // 302
+                            || resp.StatusCode == HttpStatusCode.Redirect) // 302
                         {
+                            Console.WriteLine("Moved/Redirect: {0} {1}", (int)resp.StatusCode, resp.ReasonPhrase);
                             Console.WriteLine("Location: {0}", resp.Headers.Location);
                         }
                         else
                         {
+                            Console.WriteLine("HTTP error: {0} {1}", (int)resp.StatusCode, resp.ReasonPhrase);
                             // TODO: Write more information about the error, such as the headers and the body...
                         }
                         return;
