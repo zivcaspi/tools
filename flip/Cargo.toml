@@ -1,0 +1,8 @@
+[package]
+# This program flips the resolution of my main monitor between full and HD settings, for Dota.
+name = "flip"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+winapi = { version = "0.3", features = ["wingdi", "winuser"] }
