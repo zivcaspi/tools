@@ -16,12 +16,16 @@ class Program
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            Process.Start(new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = args[0],
-                Arguments = string.Join(" ", args, 1, args.Length - 1), // TODO: Escape arguments
                 UseShellExecute = false
-            }).WaitForExit();
+            };
+            for (int i = 1; i < args.Length; i++)
+            {
+                psi.ArgumentList.Add(args[i]);
+            }
+            Process.Start(psi).WaitForExit();
         }
         finally
         {
