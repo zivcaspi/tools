@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ztime": {
+      "commandName": "Project",
+      "commandLineArgs": "nslookup onelakeeastus2.pbidedicated.windows.net"
+    }
+  }
+}
