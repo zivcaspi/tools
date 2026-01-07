@@ -445,7 +445,7 @@ namespace zget
                 Console.WriteLine("  (Contacting server ...{0})", srcUri);
             }
 
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
             using (var clientHandler = new System.Net.Http.SocketsHttpHandler())
             {
@@ -479,6 +479,32 @@ namespace zget
 
                 if (verbose)
                 {
+                    // First we create a fake connection to the service just to see what SSL options are established.
+                    if (srcUri.Scheme == Uri.UriSchemeHttps)
+                    {
+                        using (var tcpClient = new TcpClient(srcUri.IdnHost, srcUri.Port))
+                        {
+                            using (var sslStream = new System.Net.Security.SslStream(tcpClient.GetStream(), leaveInnerStreamOpen: false, (sender, cert, chain, errors) => true))
+                            {
+                                var sslClientAuthenticationOptions = new System.Net.Security.SslClientAuthenticationOptions();
+                                sslClientAuthenticationOptions.TargetHost = srcUri.IdnHost;
+                                sslClientAuthenticationOptions.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13;
+
+                                sslStream.AuthenticateAsClient(sslClientAuthenticationOptions);
+
+                                Console.WriteLine($"  TLS: Protocol                      = {sslStream.SslProtocol}");
+                                Console.WriteLine($"  TLS: Cipher                        = {sslStream.CipherAlgorithm}");
+                                Console.WriteLine($"  TLS: CipherStrength                = {sslStream.CipherStrength}");
+                                Console.WriteLine($"  TLS: Hash                          = {sslStream.HashAlgorithm}");
+                                Console.WriteLine($"  TLS: HashStrength                  = {sslStream.HashStrength}");
+                                Console.WriteLine($"  TLS: KeyExchange                   = {sslStream.KeyExchangeAlgorithm}");
+                                Console.WriteLine($"  TLS: KeyExchangeStrength           = {sslStream.KeyExchangeStrength}");
+                                Console.WriteLine($"  TLS: NegotiatedApplicationProtocol = {sslStream.NegotiatedApplicationProtocol}");
+                                Console.WriteLine($"  TLS: NegotiatedCipherSuite         = {sslStream.NegotiatedCipherSuite}");
+                            }
+                        }
+                    }
+
                     var sslOptions = new System.Net.Security.SslClientAuthenticationOptions();
                     sslOptions.RemoteCertificateValidationCallback = (object sender, X509Certificate cert, X509Chain chain, System.Net.Security.SslPolicyErrors errors) =>
                     {
