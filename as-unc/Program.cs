@@ -146,6 +146,12 @@ namespace as_unc
                 return 2;
             }
 
+            if (name.StartsWith("~"))
+            {
+                var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                name = home + name.Substring(1);
+            }
+
             if (name.StartsWith("file:")
                 || name.StartsWith("\\")
                 || name.StartsWith("http:")
