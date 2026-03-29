@@ -86,7 +86,17 @@ class Program
 
     public int PageStandardInput()
     {
-        return PageImpl(Console.OpenStandardInput());
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            var consoleRead = new FileStream("CONIN$", FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var consoleInput = new StreamReader(consoleRead);
+            return PageImpl(Console.OpenStandardInput(), consoleInput);
+        }
+        else
+        {
+            using var consoleInput = new StreamReader("/dev/tty");
+            return PageImpl(Console.OpenStandardInput(), consoleInput);
+        }
     }
 
     public int Page(string[] args)
@@ -101,11 +111,11 @@ class Program
 
         using (var file = OpenForRead(lhs))
         {
-            return PageImpl(file);
+            return PageImpl(file, Console.In);
         }
     }
 
-    public int PageImpl(Stream stream)
+    public int PageImpl(Stream stream, TextReader consoleInput)
     {
         (int nLines, int width) = GetConsoleWindow();
 
@@ -139,7 +149,30 @@ class Program
                     // TODO: Just wait for input... In the future we'll remove this line and continue again
                     Console.WriteLine();
                     Console.WriteLine(">>> Press ENTER to continue <<<");
-                    Console.ReadLine();
+                    var line =  consoleInput.ReadLine(); // Console.In is redirected, so we must read from "CONIN$"/TTY
+                    if (line == "q" || line == "exit")
+                    {
+                        Console.WriteLine("Quitting.");
+                        done = true;
+                    }
+
+                    // Now remove the 3 lines and restore cursor
+                    Console.Write("\x1b[3A"); // move up 3 lines
+
+                    // Erase line 1
+                    Console.Write("\x1b[2K");
+                    Console.Write("\x1b[1B");
+
+                    // Erase line 2
+                    Console.Write("\x1b[2K");
+                    Console.Write("\x1b[1B");
+
+                    // Erase line 3 (the user's ENTER line)
+                    Console.Write("\x1b[2K");
+
+                    // Move back up to original cursor position
+                    Console.Write("\x1b[2A");
+                    Console.Write("\x1b[0G");
                 }
             }
         }
@@ -240,7 +273,7 @@ class Program
     {
         if (Console.IsOutputRedirected)
         {
-            Console.WriteLine("Input is redirected, why use page?"); // TODO: Red and to stderr
+            Console.WriteLine("Output is redirected, why use page?"); // TODO: Red and to stderr
             Environment.Exit(2);
         }
 
