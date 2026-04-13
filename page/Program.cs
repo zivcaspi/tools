@@ -130,6 +130,8 @@ class Program
                 }
             }
 
+            nLines -= 1; // The text to press ENTER will need a line
+
             var done = false;
             while (!done)
             {
@@ -147,8 +149,7 @@ class Program
                 if (!done)
                 {
                     // TODO: Just wait for input... In the future we'll remove this line and continue again
-                    Console.WriteLine();
-                    Console.WriteLine(">>> Press ENTER to continue <<<");
+                    Console.Write(">>> Press ENTER to continue <<<");
                     var line =  consoleInput.ReadLine(); // Console.In is redirected, so we must read from "CONIN$"/TTY
                     if (line == "q" || line == "exit")
                     {
@@ -156,22 +157,18 @@ class Program
                         done = true;
                     }
 
-                    // Now remove the 3 lines and restore cursor
-                    Console.Write("\x1b[3A"); // move up 3 lines
+                    // Remove the banner etc.
+                    Console.Write("\x1b[1A"); // move up 1 line (the newline by the user)
 
                     // Erase line 1
                     Console.Write("\x1b[2K");
                     Console.Write("\x1b[1B");
 
-                    // Erase line 2
-                    Console.Write("\x1b[2K");
-                    Console.Write("\x1b[1B");
-
-                    // Erase line 3 (the user's ENTER line)
+                    // Erase line 2 (the user's ENTER line)
                     Console.Write("\x1b[2K");
 
                     // Move back up to original cursor position
-                    Console.Write("\x1b[2A");
+                    Console.Write("\x1b[1A");
                     Console.Write("\x1b[0G");
                 }
             }
@@ -245,9 +242,19 @@ class Program
                 return m_sb.ToString();
             }
 
-            if (ch == '\r' || ch == '\n')
+            if (ch == '\n')
             {
+                // Linux-style
                 break;
+            }
+            if (ch == '\r')
+            {
+                // Windows-style
+                if (reader.Peek() == '\n')
+                {
+                    reader.Read();
+                    break;
+                }
             }
             m_sb.Append((char)ch);
         }
